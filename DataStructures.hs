@@ -23,6 +23,7 @@ type Grid = Matrix Value
 type Matrix a = [Row a]
 type Row a = [a]
 data Value = X | O | E -- Value of each box is X or O or E for empty
+  deriving(Eq)
 
 -- gets a list of the rows in the grid
 rows :: Matrix a -> [Row a]
