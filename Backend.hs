@@ -2,25 +2,38 @@
    Final Project - Tic-Tac-Toe AI
 
    Backend
-   Has the code to support the computer player
+   This file contains the methods for handling the backend of
+   the game, including validation and decision making. Import
+   it with "import Backend"
 
    Honor Pledge:
    I pledge on my honor that I have not given or received any
    unauthorized assistance on this assignment.
 
-   Frank Shedleski
+   Franklin Shedleski
    Noah Zbozny
    Amy Zhao
 -}
 
 module Backend where
 import DataStructures
+import Data.Char
 
--- This is a placeholder so the UI functions.
-is_game_over :: Grid -> Bool
-is_game_over g =
-  foldl (&&) True (map (foldl (&&) True ) (map (map ((/=) E)) g))
+getDigit :: Char -> Int
+getDigit c = (ord c) - 48
 
--- This is a placeholder so the UI functions.
-get_winner :: Grid -> Value
-get_winner g = X
+validInput :: String -> Bool
+validInput s =
+   if length s == 2 then isDigit (s!!0) && isDigit (s!!1) else False
+
+validMove :: Grid -> String -> Bool
+validMove g loc = 
+   if validInput loc then
+      if getDigit (loc!!0) < 3 && getDigit (loc!!1) < 3 then
+         getValue (getRow g (getDigit (loc!!0))) (getDigit (loc!!1)) == 'E'
+      else False
+   else False
+
+
+--options = ['X', 'O', 'E']
+--allBoards g = rows g 
