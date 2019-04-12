@@ -31,7 +31,7 @@ main = do
   let game_func = case (players_string) of
                     "1" -> (one_player_game_setup)
                     "2" -> (two_player_game)
-                    _ -> (one_player_game)
+                    _   -> (one_player_game_setup)
   putStrLn "Enter team (X/O)"
   team_string <- getLine
   let (team1,team2) = case (team_string) of
@@ -54,12 +54,12 @@ while conditional game_func g p1_token p2_token =
 two_player_game :: Grid -> Char -> Char -> IO Grid
 two_player_game g p1_t p2_t =
   do
-    g_p1 <- player_turn g p1_t
+    (_, _, _, g_p1) <- player_turn g p1_t
     putStrLn $ grid_to_string g_p1
     if isGameOver g_p1
       then return g_p1
       else do
-      g_p2 <- player_turn g_p1 p2_t
+      (_, _, _, g_p2) <- player_turn g_p1 p2_t
       putStrLn $ grid_to_string g_p2
       return g_p2           
 
@@ -70,34 +70,34 @@ one_player_game_setup g p1_t com_t =
 one_player_game_player_first :: Grid -> Char -> Char -> WinPercTree -> IO Grid
 one_player_game_player_first g p1_t com_t wpt =
   do
-    g_p1 <- player_turn g p1_t
+    (p1_r, p1_c, _, g_p1) <- player_turn g p1_t
     putStrLn $ grid_to_string g_p1
     if isGameOver g_p1
       then return g_p1
       else do
-        let (g_com, wpt_new) = computer_turn g_p1 com_t wpt
+        let (g_com, wpt_new) = computer_turn g_p1 com_t (reduceWPT wpt p1_r p1_c p1_t)
         putStrLn $ grid_to_string g_com
         if isGameOver g_com
-	then return g_com
-	else one_player_game_player_first g_com p1_t com_t wpt_new
+        then return g_com
+        else one_player_game_player_first g_com p1_t com_t wpt_new
 
 -- gets player input and returns a new grid with their token added
-player_turn :: Grid -> Char -> IO Grid
+player_turn :: Grid -> Char -> IO (Int, Int, Char, Grid)
 player_turn g token =
   do
     putStrLn $ (show token) ++ "\'s turn!"
     putStrLn "Enter row to put symbol (1/2/3)"
     y_string <- getLine
-    let y = read y_string :: Integer
+    let y = read y_string :: Int
     putStrLn "Enter col to put symbol (1/2/3)"
     x_string <- getLine
-    let x = read x_string :: Integer
+    let x = read x_string :: Int
     let g_new = grid_add_value g x y token
-    return g_new
+    return (x, y, token, g_new)
   
 -- This is a placeholder. Implement it once we have working AI code
 computer_turn :: Grid -> Char -> WinPercTree -> (Grid, WinPercTree)
 computer_turn g token wpt =
   let (row, col, team, wpt_new) = popNextMove wpt in
-    (grid_add_value g row, col, team, wpt_new)
+    (grid_add_value g row col team, wpt_new)
 

@@ -36,15 +36,15 @@ validMove g loc =
    else False
 
 -- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
-grid_add_value_auxX :: Row Char -> Integer -> Integer -> Integer -> Integer -> Char -> Row Char
+grid_add_value_auxX :: Row Char -> Int -> Int -> Int -> Int -> Char -> Row Char
 grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
 grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
   (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
-grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Char -> Grid
+grid_add_value_auxY :: Grid -> Int -> Int -> Int -> Char -> Grid
 grid_add_value_auxY [] y_curr x_goal y_goal value = []
 grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
   (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
-grid_add_value :: Grid -> Integer -> Integer -> Char -> Grid
+grid_add_value :: Grid -> Int -> Int -> Char -> Grid
 grid_add_value g_old x_pos y_pos value =
   grid_add_value_auxY g_old 1 x_pos y_pos value
 
@@ -175,15 +175,19 @@ calcMaxWinPerc wptList =
   maxMaybeFloat (map (getWinPerc) wptList)
     
 -- given a move (row col team) and List of Tree Node reduces the WinPercTree appropriately
-reduceWPT :: [WinPercTree] -> Int -> Int -> Char -> WinPercTree
-reduceWPT [] _ _ _ = WPTLeaf
-reduceWPT [WPTLeaf] _ _ _ = WPTLeaf
-reduceWPT ((WPTNode hRow hCol hTeam hPerc hNext):t) row col team =
+reduceWPTNext :: [WinPercTree] -> Int -> Int -> Char -> WinPercTree
+reduceWPTNext [] _ _ _ = WPTLeaf
+reduceWPTNext [WPTLeaf] _ _ _ = WPTLeaf
+reduceWPTNext ((WPTNode hRow hCol hTeam hPerc hNext):t) row col team =
   if hRow == row && hCol == col && hTeam == team then
     (WPTNode hRow hCol hTeam hPerc hNext)
   else
-    reduceWPT t row col team
-    
+    reduceWPTNext t row col team
+reduceWPT :: WinPercTree -> Int -> Int -> Char -> WinPercTree
+reduceWPT WPTLeaf _ _ _ = WPTLeaf
+reduceWPT (WPTNode wptRow wptCol wptTeam wptPerc wptNext) row col team =
+  reduceWPTNext wptNext row col team
+
 -- returns the best move for the cpu
 getNextMove :: [WinPercTree] -> (Int, Int, Char)
 getNextMove wptList = getNextMoveAux wptList (calcMaxWinPerc wptList)
@@ -195,9 +199,9 @@ getNextMoveAux ((WPTNode hRow hCol hTeam hPerc _):wptt) maxWinPerc =
     getNextMoveAux wptt maxWinPerc
 
 -- returns the next move and an appropriately reduced version of the WPTree
-popNextMove :: [WinPercTree] -> (Int, Int, Char, WinPercTree)
+popNextMove :: WinPercTree -> (Int, Int, Char, WinPercTree)
 popNextMove WPTLeaf = (0,0,'E',WPTLeaf)
 popNextMove (WPTNode wptRow wptCol wptTeam wptPerc wptNext) =
   let (row, col, team) = getNextMove wptNext in
-    (row, col, team, reduceWPT (WPTNode wptRow wptCol wptTeam wptPerc wptNext) row col team)
+    (row, col, team, reduceWPTNext wptNext row col team)
 
