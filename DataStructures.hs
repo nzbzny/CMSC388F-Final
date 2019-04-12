@@ -48,25 +48,18 @@ getValue r n =
 -- '\0' causes the other input to be returned
 cellAnd :: Char -> Char -> Char
 cellAnd a b =
-  if a == b then
-    if a == 'X' then 'X'
-    else if a == 'O' then 'O'
-    else 'E'
-  else if a == 'T' then b
-  else if b == 'T' then a
+  if a == b then a
+  else if a == '\0' then b
+  else if b == '\0' then a
   else 'E'
 
--- ors the inputs such that if a==b then a else 'E'
+-- ors the inputs such that if a==b then a
+--                          if a=='X && b=='O' then 'E'
 --                          if a=='E' then b
 --                          if b=='E' then a
 cellOr :: Char -> Char -> Char
 cellOr a b =
-  if a == b then
-    if a == 'X'
-    then 'X'
-    else if a == 'O'
-    then 'O'
-    else 'E'
+  if a == b then a
   else if a == 'E' then b
   else if b == 'E' then a
   else 'E'

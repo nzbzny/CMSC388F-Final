@@ -38,11 +38,9 @@ validMove g loc =
 getWinner :: Grid -> Char
 getWinner g =
   (getWinnerAux (rows g)) `cellOr` (getWinnerAux (cols g)) `cellOr` (getWinnerAux (dias g))
-  
 getWinnerAux :: Grid -> Char
 getWinnerAux g =
-  foldl (cellOr) 'E' (map (checkRowWinner) g)
-  
+  foldl (cellOr) 'E' (map (getRowWinner) g)
 getRowWinner :: Row Char -> Char
 getRowWinner r =  
   foldl (cellAnd) '\0' r
