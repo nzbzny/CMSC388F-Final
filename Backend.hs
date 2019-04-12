@@ -22,6 +22,7 @@ import Data.Char
 getDigit :: Char -> Int
 getDigit c = (ord c) - 48
 
+-- used to validate user input
 validInput :: String -> Bool
 validInput s =
    if length s == 2 then isDigit (s!!0) && isDigit (s!!1) else False
@@ -33,6 +34,22 @@ validMove g loc =
          getValue (getRow g (getDigit (loc!!0))) (getDigit (loc!!1)) == 'E'
       else False
    else False
+
+-- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
+grid_add_value_auxX :: Row Char -> Integer -> Integer -> Integer -> Integer -> Char -> Row Char
+grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
+grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
+  (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
+grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Char -> Grid
+grid_add_value_auxY [] y_curr x_goal y_goal value = []
+grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
+  (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
+grid_add_value :: Grid -> Integer -> Integer -> Char -> Grid
+grid_add_value g_old x_pos y_pos value =
+  grid_add_value_auxY g_old 1 x_pos y_pos value
+
+--------------------------------------------------------------------------------------------
+-- Functions for validation
 
 -- returns boolean indicating whether the game is over
 isGameOver :: Grid -> Bool
@@ -63,19 +80,27 @@ getRowWinner :: Row Char -> Char
 getRowWinner r =  
   foldl (cellAnd) '\0' r
 
---options = ['X', 'O', 'E']
---allBoards g = rows g 
+----------------------------------------------------------------------------------------
+-- Functions to calculate all boards given next move
 
+-- converts a list to a list list where each list has length n
+-- this will be used to convert 9 entry lists to 3x3 matricies
+-- this operation can be easily reversed with the built in function concat
+chunk :: Int -> [a] -> [[a]]
+chunk n [] = []
+chunk n xs = (take n xs):(chunksOf n (drop n xs))
 
--- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
-grid_add_value_auxX :: Row Char -> Integer -> Integer -> Integer -> Integer -> Char -> Row Char
-grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
-grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
-  (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
-grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Char -> Grid
-grid_add_value_auxY [] y_curr x_goal y_goal value = []
-grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
-  (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
-grid_add_value :: Grid -> Integer -> Integer -> Char -> Grid
-grid_add_value g_old x_pos y_pos value =
-  grid_add_value_auxY g_old 1 x_pos y_pos value
+-- recursion that generates a list of tuples
+-- each tuple holds a broken up flatten list of the grid
+-- tuple has form (prefix, entry, suffix)
+-- this is used for the list comprehension in next which adds values where entry=='E'
+picks :: [x] -> [([x], x, [x])]
+picks [] = []
+picks (x : xs) = ([] , x, xs) : [(x : prefix, y, suffix) | (prefix, y, suffix) <- picks xs]
+
+-- list comprehension that uses the results of picks
+-- replaces the entry pulled by picks when it equals E
+-- the tuple is then converted back to a grid using the chuck method from above
+next :: Grid -> Char -> [Grid]
+next g team =
+  [ chunk 3 (prefix ++ [team] ++ suffix) | (prefix, 'E', suffix) <- picks (concat g) ]
