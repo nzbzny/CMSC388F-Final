@@ -105,7 +105,7 @@ nextMove g team =
     (row, col, prefix, 'E', suffix) <- entries (concat g) ]
 
 -- data type for board tree node
--- Node is of form:           Row Col Team result_g Winner NextNodes
+-- Node is of form:             Row Col Team result_g Winner NextNodes
 data MoveTree = MTLeaf | MTNode Int Int Char Grid     Char   [MoveTree]
 
 -- function that generates the tree of all possible moves
@@ -122,6 +122,44 @@ generateMTNode (row, col, team, g) =
   Node row col team g (getWinner g) (generateMTNodeList (nextMove g (incTeam team)))
 
 
--- data type for tree holding win percent info derived from move tree
-data WinPercTree = WPTLeaf
+---------------------------------------------------------------------------------------
+-- Functions that power the AI
 
+-- data type for tree holding win percent info derived from move tree
+-- Node is of the form:              Row Col Team Perc  NextNodes
+data WinPercTree = WPTLeaf | WPTNode Int Int Char Float [WinPercTree]
+
+-- generates WinPercTree from MoveTree
+generateWinPercTree :: Char -> MoveTree -> WinPercTree
+generateWinPercTree _ MTLeaf  = WPTLeaf
+generateWinPercTree cpuTeam (MTNode row col team g winner nextMoves) =
+  if cpuTeam == winner then
+    WPTNode row col team 1 [WPTLeaf]
+  else if winner == 'T' then
+    WPTNode row col team 0.5 [WPTLeaf]
+  else if winner == 'E' then
+    let nextList = (map (generateWinPercTree cpuTeam) nextMoves) in
+    WPTNode row col team (calcAverageWinPerc (nextList)) nextList
+  else
+    WPTNode row col team 0 [WPTLeaf]
+
+-- function to pull win percent from WinPercTree Node
+getWinPerc :: WinPercTree -> Maybe Float
+getWinPerc WPTLeaf = Nothing
+getWinPerc (WPTNode _ _ _ perc _) = Just perc
+
+-- functions to average maybe floats
+sumMaybeFloat :: [Maybe Float] -> Float
+sumMaybeFloat l = foldl (foldExtractFloat) 0 l
+
+foldExtractFloat :: Float -> Maybe Float -> Float
+foldExtractFloat a Nothing = a
+foldExtractFloat a (Just x) = a + x
+
+calcAverageWinPerc :: [WinPercTree] -> Float
+calcAverageWinPerc wptList =
+  let wpList = (map (getWinPerc) wptList) in
+    (sumMaybeFloat wpList) / (fromIntegral (length wpList))
+
+
+    
