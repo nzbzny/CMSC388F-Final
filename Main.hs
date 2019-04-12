@@ -75,6 +75,7 @@ one_player_game_player_first g p1_t com_t wpt =
     if isGameOver g_p1
       then return g_p1
       else do
+        putStrLn "Computer\'s turn!"
         let (g_com, wpt_new) = computer_turn g_p1 com_t (reduceWPT wpt p1_r p1_c p1_t)
         putStrLn $ grid_to_string g_com
         if isGameOver g_com
