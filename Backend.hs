@@ -47,3 +47,17 @@ getRowWinner r =
 
 --options = ['X', 'O', 'E']
 --allBoards g = rows g 
+
+
+-- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
+grid_add_value_auxX :: Row Value -> Integer -> Integer -> Integer -> Integer -> Value -> Row Value
+grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
+grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
+  (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
+grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Value -> Grid
+grid_add_value_auxY [] y_curr x_goal y_goal value = []
+grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
+  (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
+grid_add_value :: Grid -> Integer -> Integer -> Value -> Grid
+grid_add_value g_old x_pos y_pos value =
+  grid_add_value_auxY g_old 1 x_pos y_pos value
