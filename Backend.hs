@@ -193,3 +193,11 @@ getNextMoveAux ((WPTNode hRow hCol hTeam hPerc _):wptt) maxWinPerc =
     (hRow, hCol, hTeam)
   else
     getNextMoveAux wptt maxWinPerc
+
+-- returns the next move and an appropriately reduced version of the WPTree
+popNextMove :: [WinPercTree] -> (Int, Int, Char, WinPercTree)
+popNextMove WPTLeaf = (0,0,'E',WPTLeaf)
+popNextMove (WPTNode wptRow wptCol wptTeam wptPerc wptNext) =
+  let (row, col, team) = getNextMove wptNext in
+    (row, col, team, reduceWPT (WPTNode wptRow wptCol wptTeam wptPerc wptNext) row col team)
+
