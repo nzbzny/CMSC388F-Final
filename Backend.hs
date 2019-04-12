@@ -34,9 +34,27 @@ validMove g loc =
       else False
    else False
 
--- returns winner as O, X, or E
+-- returns boolean indicating whether the game is over
+isGameOver :: Grid -> Bool
+isGameOver g = ((getWinner g) /= 'E')
+
+-- returns winner as O, X, T, or E
 getWinner :: Grid -> Char
 getWinner g =
+  if not (isBoardFull g) then
+    checkWinner g
+  else
+    (\x->if x=='E' then 'T' else x) (checkWinner g)
+
+-- used to evaluate whether there is a tie
+isBoardFull :: Grid -> Bool
+isBoardFull g = foldl (&&) True (map (isRowFull) g)
+isRowFull :: Row Char -> Bool
+isRowFull r = foldl (\a->(\x->(x/='E')&&a)) True r
+
+-- returns winner as O, X, T, or E
+checkWinner :: Grid -> Char
+checkWinner g =
   (getWinnerAux (rows g)) `cellOr` (getWinnerAux (cols g)) `cellOr` (getWinnerAux (dias g))
 getWinnerAux :: Grid -> Char
 getWinnerAux g =
@@ -50,14 +68,14 @@ getRowWinner r =
 
 
 -- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
-grid_add_value_auxX :: Row Value -> Integer -> Integer -> Integer -> Integer -> Value -> Row Value
+grid_add_value_auxX :: Row Char -> Integer -> Integer -> Integer -> Integer -> Char -> Row Char
 grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
 grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
   (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
-grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Value -> Grid
+grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Char -> Grid
 grid_add_value_auxY [] y_curr x_goal y_goal value = []
 grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
   (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
-grid_add_value :: Grid -> Integer -> Integer -> Value -> Grid
+grid_add_value :: Grid -> Integer -> Integer -> Char -> Grid
 grid_add_value g_old x_pos y_pos value =
   grid_add_value_auxY g_old 1 x_pos y_pos value

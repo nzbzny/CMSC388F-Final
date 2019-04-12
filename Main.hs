@@ -25,33 +25,33 @@ import UI
 -- completely untested main method I made to test if drawing the stuff works ~Frank
 main :: IO ()
 main = do
-  let g_empty = [[E,E,E],[E,E,E],[E,E,E]]
-  putStrLn "Enter team (X/O)"
-  team_string <- getLine
-  let (team1,team2) = case (team_string) of
-                        ("X") -> (X,O)
-                        ("x") -> (X,O)
-                        ("O") -> (O,X)
-                        ("o") -> (O,X)
-                        (_) -> (X,O)
+  let g_empty = [['E','E','E'],['E','E','E'],['E','E','E']]
   putStrLn "Enter # of players (1/2)"
   players_string <- getLine
   let game_func = case (players_string) of
                     "1" -> (one_player_game)
                     "2" -> (two_player_game)
                     _ -> (one_player_game)
-  while (True) g_empty team1 team2 (game_func)
+  putStrLn "Enter team (X/O)"
+  team_string <- getLine
+  let (team1,team2) = case (team_string) of
+                        ("X") -> ('X','O')
+                        ("x") -> ('X','O')
+                        ("O") -> ('O','X')
+                        ("o") -> ('O','X')
+                        (_) -> ('X','O')
+  while (True) (game_func) g_empty team1 team2 
 
-while :: Bool -> Grid -> Value -> Value -> (Grid -> Value -> Value -> IO Grid) -> IO ()
-while conditional g p1_token p2_token game_func =
+while :: Bool -> (Grid -> Char -> Char -> IO Grid) -> Grid -> Char -> Char -> IO ()
+while conditional game_func g p1_token p2_token =
   if conditional == False then
-    putStrLn $ "Winner is: " ++  (show $ get_winner g)
+    putStrLn $ "Winner is: " ++  (show $ getWinner g)
   else
     do
       g_new <- (game_func g p1_token p2_token)
-      while (not (is_game_over g_new)) g_new p1_token p2_token (game_func)
+      while (not (is_game_over g_new)) (game_func) g_new p1_token p2_token 
 
-two_player_game :: Grid -> Value -> Value -> IO Grid
+two_player_game :: Grid -> Char -> Char -> IO Grid
 two_player_game g p1_t p2_t =
   do
     g_p1 <- player_turn g p1_t
@@ -63,7 +63,7 @@ two_player_game g p1_t p2_t =
       putStrLn $ grid_to_string g_p2
       return g_p2           
 
-one_player_game :: Grid -> Value -> Value -> IO Grid
+one_player_game :: Grid -> Char -> Char -> IO Grid
 one_player_game g p1_t com_t =
   do
     g_p1 <- player_turn g p1_t
@@ -76,7 +76,7 @@ one_player_game g p1_t com_t =
       return g_com   
 
 -- gets player input and returns a new grid with their token added
-player_turn :: Grid -> Value -> IO Grid
+player_turn :: Grid -> Char -> IO Grid
 player_turn g token =
   do
     putStrLn $ (show token) ++ "\'s turn!"
@@ -90,7 +90,7 @@ player_turn g token =
     return g_new
   
 -- This is a placeholder. Implement it once we have working AI code
-computer_turn :: Grid -> Value -> Grid
+computer_turn :: Grid -> Char -> Grid
 computer_turn g token =
   grid_add_value g 1 1 token
 

@@ -22,7 +22,6 @@ import Data.List
 type Grid = Matrix Char
 type Matrix a = [Row a]
 type Row a = [a]
---data Value = X | O | E -- Value of each box is X or O or E for empty
 
 -- gets a list of the rows in the grid
 rows :: Matrix a -> [Row a]
@@ -41,8 +40,7 @@ getRow :: Matrix a -> Int -> Row a
 getRow g n = if n < 3 then g!!n else []
 
 getValue :: Row a -> Int -> a
-getValue r n = 
-    r!!n
+getValue r n = r!!n
 
 -- ands the inputs such that if a==b then a else 'E' 
 -- '\0' causes the other input to be returned
