@@ -16,11 +16,6 @@
 module UI where
 import DataStructures
 
-instance Show Value where
-  show X = "X"
-  show O = "O"
-  show E = " "
-
 {-
  Should result in a grid that looks like:
  +-+-+-+
@@ -36,21 +31,18 @@ instance Show Value where
 -}
 grid_to_string :: Grid -> String
 grid_to_string g =
-  foldr (++) "+-+-+-+" $     -- convert list to string
-  map ((++) "+-+-+-+\n") $   -- pre-append +-+-+-+ row to every row
-  map (foldr (++) "|\n") $   -- convert rows to single strings
-  (map (map ((++) "|"))      -- pre-appened | to all
-   (map (map show) g))       -- convert all values to strings using show
+  foldr (\x->(\a->(showRow x) ++ a)) "+-+-+-+" g
 
--- returns a grid with the value added at x_pos y_pos == col# row#  (rows and columns are 1 indexed)
-grid_add_value_auxX :: Row Value -> Integer -> Integer -> Integer -> Integer -> Value -> Row Value
-grid_add_value_auxX [] x_curr y_curr x_goal y_goal value = []
-grid_add_value_auxX (g_h:g_t) x_curr y_curr x_goal y_goal value =
-  (if x_curr == x_goal && y_curr == y_goal then value else g_h) : (grid_add_value_auxX g_t (x_curr+1) y_curr x_goal y_goal value)
-grid_add_value_auxY :: Grid -> Integer -> Integer -> Integer -> Value -> Grid
-grid_add_value_auxY [] y_curr x_goal y_goal value = []
-grid_add_value_auxY (g_h:g_t) y_curr x_goal y_goal value =
-  (grid_add_value_auxX g_h 1 y_curr x_goal y_goal value) : (grid_add_value_auxY g_t (y_curr+1) x_goal y_goal value)
-grid_add_value :: Grid -> Integer -> Integer -> Value -> Grid
-grid_add_value g_old x_pos y_pos value =
-  grid_add_value_auxY g_old 1 x_pos y_pos value
+-- assembles row using foldr of showCell
+showRow :: Row Char -> String
+showRow r = "+-+-+-+\n" ++ (foldr (\x->(\a->(showCell x) ++ a)) "|\n" r)
+
+-- add cell wall, used in foldr in showRow
+showCell :: Char -> String
+showCell x = "|" ++ (showValue x)
+
+-- convert char cell value to a string representation
+showValue :: Char -> String
+showValue 'X' = "X"
+showValue 'O' = "O"
+showValue  _  = " "
