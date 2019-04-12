@@ -61,3 +61,20 @@ cellOr a b =
   else if a == 'E' then b
   else if b == 'E' then a
   else 'E'
+
+-- "increments" team. (actually just flips it to other team)
+incTeam :: Char -> Char
+incTeam t = if t=='X' then 'O' else 'X'
+
+-- function to increment a set of coordinates in the grid
+incCoords :: (Int,Int) -> (Int,Int)
+incCoords (3,3) = (1,1)
+incCoords (r,3) = (r+1,1)
+incCoords (r,c) = (r,c+1)
+
+-- converts a list to a list list where each list has length n
+-- this will be used to convert 9 entry lists to 3x3 matricies
+-- this operation can be easily reversed with the built in function concat
+chunk :: Int -> [a] -> [[a]]
+chunk n [] = []
+chunk n xs = (take n xs):(chunk n (drop n xs))

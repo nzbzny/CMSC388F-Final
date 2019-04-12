@@ -83,19 +83,6 @@ getRowWinner r =
 ----------------------------------------------------------------------------------------
 -- Functions to calculate all boards given next move
 
--- function to increment a set of coordinates in the grid
-incCoords :: (Int,Int) -> (Int,Int)
-incCoords (3,3) = (1,1)
-incCoords (r,3) = (r+1,1)
-incCoords (r,c) = (r,c+1)
-
--- converts a list to a list list where each list has length n
--- this will be used to convert 9 entry lists to 3x3 matricies
--- this operation can be easily reversed with the built in function concat
-chunk :: Int -> [a] -> [[a]]
-chunk n [] = []
-chunk n xs = (take n xs):(chunk n (drop n xs))
-
 -- recursion that generates a list of tuples
 -- each tuple holds a broken up flatten list of the grid
 -- tuple has form (prefix, entry, suffix)
@@ -117,7 +104,24 @@ nextMove g team =
   [ (row, col, team, (chunk 3 (prefix ++ [team] ++ suffix))) |
     (row, col, prefix, 'E', suffix) <- entries (concat g) ]
 
-
 -- data type for board tree node
--- tuple is of form (MoveRow, MoveCol, Team, GridAfterMove, WinPercentage, NextNodes)
-data TNode = (Int,Int,Char,Grid,[TNode])
+-- Node is of form:           Row Col Team result_g Winner NextNodes
+data MoveTree = MTLeaf | MTNode Int Int Char Grid     Char   [MoveTree]
+
+-- function that generates the tree of all possible moves
+-- I would comment this but I wrote it at 3am and have no clue what I was thinking or how it works
+generateMoveTree :: Grid -> Char -> MoveTree
+generateMoveTree g team = Node 0 0 'E' g 'E' (generateMTNodeList (nextMove g team))
+
+generateMTNodeList :: [(Int, Int, Char, Grid)] -> [MoveTree]
+generateMTNodeList [] = [MTLeaf]
+generateMTNodeList nextMoves = map (generateMTNode) nextMoves
+
+generateMTNode :: (Int, Int, Char, Grid) -> MoveTree
+generateMTNode (row, col, team, g) =
+  Node row col team g (getWinner g) (generateMTNodeList (nextMove g (incTeam team)))
+
+
+-- data type for tree holding win percent info derived from move tree
+data WinPercTree = WPTLeaf
+
