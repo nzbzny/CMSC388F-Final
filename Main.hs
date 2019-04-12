@@ -49,14 +49,14 @@ while conditional game_func g p1_token p2_token =
   else
     do
       g_new <- (game_func g p1_token p2_token)
-      while (not (is_game_over g_new)) (game_func) g_new p1_token p2_token 
+      while (not (isGameOver g_new)) (game_func) g_new p1_token p2_token 
 
 two_player_game :: Grid -> Char -> Char -> IO Grid
 two_player_game g p1_t p2_t =
   do
     g_p1 <- player_turn g p1_t
     putStrLn $ grid_to_string g_p1
-    if is_game_over g_p1
+    if isGameOver g_p1
       then return g_p1
       else do
       g_p2 <- player_turn g_p1 p2_t
@@ -68,7 +68,7 @@ one_player_game g p1_t com_t =
   do
     g_p1 <- player_turn g p1_t
     putStrLn $ grid_to_string g_p1
-    if is_game_over g_p1
+    if isGameOver g_p1
       then return g_p1
       else do
       let g_com = computer_turn g_p1 com_t
