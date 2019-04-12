@@ -110,8 +110,9 @@ data MoveTree = MTLeaf | MTNode Int Int Char Grid     Char   [MoveTree]
 
 -- function that generates the tree of all possible moves
 -- I would comment this but I wrote it at 3am and have no clue what I was thinking or how it works
+-- input the grid (probably g_empty) and the team of who goes first
 generateMoveTree :: Grid -> Char -> MoveTree
-generateMoveTree g team = Node 0 0 'E' g 'E' (generateMTNodeList (nextMove g team))
+generateMoveTree g team = MTNode 0 0 'E' g 'E' (generateMTNodeList (nextMove g team))
 
 generateMTNodeList :: [(Int, Int, Char, Grid)] -> [MoveTree]
 generateMTNodeList [] = [MTLeaf]
@@ -119,7 +120,7 @@ generateMTNodeList nextMoves = map (generateMTNode) nextMoves
 
 generateMTNode :: (Int, Int, Char, Grid) -> MoveTree
 generateMTNode (row, col, team, g) =
-  Node row col team g (getWinner g) (generateMTNodeList (nextMove g (incTeam team)))
+  MTNode row col team g (getWinner g) (generateMTNodeList (nextMove g (incTeam team)))
 
 
 ---------------------------------------------------------------------------------------
@@ -150,16 +151,45 @@ getWinPerc (WPTNode _ _ _ perc _) = Just perc
 
 -- functions to average maybe floats
 sumMaybeFloat :: [Maybe Float] -> Float
-sumMaybeFloat l = foldl (foldExtractFloat) 0 l
+sumMaybeFloat l = foldl (foldableSumFloat) 0 l
 
-foldExtractFloat :: Float -> Maybe Float -> Float
-foldExtractFloat a Nothing = a
-foldExtractFloat a (Just x) = a + x
+foldableSumFloat :: Float -> Maybe Float -> Float
+foldableSumFloat a Nothing = a
+foldableSumFloat a (Just x) = a + x
 
 calcAverageWinPerc :: [WinPercTree] -> Float
 calcAverageWinPerc wptList =
   let wpList = (map (getWinPerc) wptList) in
     (sumMaybeFloat wpList) / (fromIntegral (length wpList))
 
+-- function to find max of maybe floats
+maxMaybeFloat :: [Maybe Float] -> Float
+maxMaybeFloat l = foldl (foldableMaxFloat) (-1) l
 
+foldableMaxFloat :: Float -> Maybe Float -> Float
+foldableMaxFloat a Nothing = a
+foldableMaxFloat a (Just x) = if x > a then x else a
+
+calcMaxWinPerc :: [WinPercTree] -> Float
+calcMaxWinPerc wptList =
+  maxMaybeFloat (map (getWinPerc) wptList)
     
+-- given a move (row col team) and List of Tree Node reduces the WinPercTree appropriately
+reduceWPT :: [WinPercTree] -> Int -> Int -> Char -> WinPercTree
+reduceWPT [] _ _ _ = WPTLeaf
+reduceWPT [WPTLeaf] _ _ _ = WPTLeaf
+reduceWPT ((WPTNode hRow hCol hTeam hPerc hNext):t) row col team =
+  if hRow == row && hCol == col && hTeam == team then
+    (WPTNode hRow hCol hTeam hPerc hNext)
+  else
+    reduceWPT t row col team
+    
+-- returns the best move for the cpu
+getNextMove :: [WinPercTree] -> (Int, Int, Char)
+getNextMove wptList = getNextMoveAux wptList (calcMaxWinPerc wptList)
+getNextMoveAux :: [WinPercTree] -> Float -> (Int, Int, Char)
+getNextMoveAux ((WPTNode hRow hCol hTeam hPerc _):wptt) maxWinPerc =
+  if hPerc == maxWinPerc then
+    (hRow, hCol, hTeam)
+  else
+    getNextMoveAux wptt maxWinPerc
