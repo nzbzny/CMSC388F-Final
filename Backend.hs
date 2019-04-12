@@ -83,24 +83,41 @@ getRowWinner r =
 ----------------------------------------------------------------------------------------
 -- Functions to calculate all boards given next move
 
+-- function to increment a set of coordinates in the grid
+incCoords :: (Int,Int) -> (Int,Int)
+incCoords (3,3) = (1,1)
+incCoords (r,3) = (r+1,1)
+incCoords (r,c) = (r,c+1)
+
 -- converts a list to a list list where each list has length n
 -- this will be used to convert 9 entry lists to 3x3 matricies
 -- this operation can be easily reversed with the built in function concat
 chunk :: Int -> [a] -> [[a]]
 chunk n [] = []
-chunk n xs = (take n xs):(chunksOf n (drop n xs))
+chunk n xs = (take n xs):(chunk n (drop n xs))
 
 -- recursion that generates a list of tuples
 -- each tuple holds a broken up flatten list of the grid
 -- tuple has form (prefix, entry, suffix)
 -- this is used for the list comprehension in next which adds values where entry=='E'
-picks :: [x] -> [([x], x, [x])]
-picks [] = []
-picks (x : xs) = ([] , x, xs) : [(x : prefix, y, suffix) | (prefix, y, suffix) <- picks xs]
+entries :: [x] -> [(Int, Int, [x], x, [x])]
+entries xs = entriesAux (1,1) xs
+entriesAux :: (Int, Int) -> [x] -> [(Int, Int, [x], x, [x])]
+entriesAux _ [] = []
+entriesAux (r,c) (x:xs) =
+  (r, c, [], x, xs) :
+  [(row, col, x:prefix, y, suffix) |
+   (row, col, prefix,   y, suffix) <- entriesAux (incCoords (r,c)) xs]
 
 -- list comprehension that uses the results of picks
 -- replaces the entry pulled by picks when it equals E
 -- the tuple is then converted back to a grid using the chuck method from above
-next :: Grid -> Char -> [Grid]
-next g team =
-  [ chunk 3 (prefix ++ [team] ++ suffix) | (prefix, 'E', suffix) <- picks (concat g) ]
+nextMove :: Grid -> Char -> [(Int, Int, Char, Grid)]
+nextMove g team =
+  [ (row, col, team, (chunk 3 (prefix ++ [team] ++ suffix))) |
+    (row, col, prefix, 'E', suffix) <- entries (concat g) ]
+
+
+-- data type for board tree node
+-- tuple is of form (MoveRow, MoveCol, Team, GridAfterMove, WinPercentage, NextNodes)
+data TNode = (Int,Int,Char,Grid,[TNode])
