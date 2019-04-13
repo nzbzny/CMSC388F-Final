@@ -65,8 +65,19 @@ two_player_game g p1_t p2_t =
 
 one_player_game_setup :: Grid -> Char -> Char -> IO Grid
 one_player_game_setup g p1_t com_t =
-  one_player_game_player_first g p1_t com_t (generateWinPercTree com_t (generateMoveTree g p1_t)) 
-
+  do
+    putStrLn $ "Enter team who goes first (X/O)"
+    first_string <- getLine
+    let first_team = case (first_string) of
+                       ("X") -> ('X')
+                       ("x") -> ('X')
+                       ("O") -> ('O')
+                       ("o") -> ('O')
+                       (_) -> ('X')
+    if first_team == p1_t
+      then one_player_game_player_first g p1_t com_t (generateWinPercTree com_t (generateMoveTree g p1_t))
+      else one_player_game_com_first g p1_t com_t (generateWinPercTree com_t (generateMoveTree g com_t))
+      
 one_player_game_player_first :: Grid -> Char -> Char -> WinPercTree -> IO Grid
 one_player_game_player_first g p1_t com_t wpt =
   do
@@ -81,6 +92,21 @@ one_player_game_player_first g p1_t com_t wpt =
         if isGameOver g_com
         then return g_com
         else one_player_game_player_first g_com p1_t com_t wpt_new
+
+one_player_game_com_first :: Grid -> Char -> Char -> WinPercTree -> IO Grid
+one_player_game_com_first g p1_t com_t wpt =
+  do
+    putStrLn "Computer\'s turn!"
+    let (g_com, wpt_new) = computer_turn g com_t wpt
+    putStrLn $ grid_to_string g_com
+    if isGameOver g_com
+      then return g_com
+      else do
+        (p1_r, p1_c, _, g_p1) <- player_turn g_com p1_t
+        putStrLn $ grid_to_string g_p1
+        if isGameOver g_p1
+          then return g_p1
+          else one_player_game_com_first g_p1 p1_t com_t (reduceWPT wpt_new p1_r p1_c p1_t)
 
 -- gets player input and returns a new grid with their token added
 player_turn :: Grid -> Char -> IO (Int, Int, Char, Grid)
