@@ -37,10 +37,10 @@ dias m = (((m!!0)!!0):((m!!1)!!1):((m!!2)!!2):[]):
          (((m!!0)!!2):((m!!1)!!1):((m!!2)!!0):[]):[]
 
 getRow :: Matrix a -> Int -> Row a
-getRow g n = if n < 3 then g!!n else []
+getRow g n = if n <= 3 then g!!(n-1) else []
 
 getValue :: Row a -> Int -> a
-getValue r n = r!!n
+getValue r n = r!!(n-1)
 
 -- ands the inputs such that if a==b then a else 'E' 
 -- '\0' causes the other input to be returned

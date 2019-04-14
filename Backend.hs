@@ -30,7 +30,7 @@ validInput s =
 validMove :: Grid -> String -> Bool
 validMove g loc = 
    if validInput loc then
-      if getDigit (loc!!0) < 3 && getDigit (loc!!1) < 3 then
+      if getDigit (loc!!0) <= 3 && getDigit (loc!!1) <= 3 then
          getValue (getRow g (getDigit (loc!!0))) (getDigit (loc!!1)) == 'E'
       else False
    else False

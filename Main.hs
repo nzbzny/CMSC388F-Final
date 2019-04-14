@@ -86,8 +86,12 @@ player_turn g token =
     putStrLn "Enter col to put symbol (1/2/3)"
     x_string <- getLine
     let x = read x_string :: Integer
-    let g_new = grid_add_value g x y token
-    return g_new
+    if (validMove g (x_string++y_string)) == True 
+      then do
+        let g_new = grid_add_value g x y token
+        return g_new
+      else player_turn g token 
+    --return g_new
   
 -- This is a placeholder. Implement it once we have working AI code
 computer_turn :: Grid -> Char -> Grid
