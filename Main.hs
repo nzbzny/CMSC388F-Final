@@ -49,6 +49,7 @@ while conditional game_func g p1_token p2_token =
   else
     do
       g_new <- (game_func g p1_token p2_token)
+      putStrLn $ grid_to_string g_new
       while (not (isGameOver g_new)) (game_func) g_new p1_token p2_token 
 
 two_player_game :: Grid -> Char -> Char -> IO Grid
@@ -60,7 +61,6 @@ two_player_game g p1_t p2_t =
       then return g_p1
       else do
       g_p2 <- player_turn g_p1 p2_t
-      putStrLn $ grid_to_string g_p2
       return g_p2           
 
 one_player_game :: Grid -> Char -> Char -> IO Grid
@@ -86,7 +86,7 @@ player_turn g token =
     putStrLn "Enter col to put symbol (1/2/3)"
     x_string <- getLine
     let x = read x_string :: Integer
-    if (validMove g (x_string++y_string)) == True 
+    if (validMove g (y_string++x_string)) == True 
       then do
         let g_new = grid_add_value g x y token
         return g_new
